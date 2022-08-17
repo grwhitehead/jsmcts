@@ -53,7 +53,6 @@ parser.on('player', function(opt, value) {
     players.push(value);
 });
 
-
 parser.parse(process.argv)
 
 if (players.length == 0) {

@@ -2,8 +2,6 @@
 
 JSMCTS is a javascript implementation of <a href="https://en.wikipedia.org/wiki/Monte_Carlo_tree_search">Monte Carlo Tree Search (MCTS)</a> that can be used to implement game playing AIs that run entirely in a web browser.
 
-Play against JSMCTS in your web browser <a href="https://grwhitehead.github.io/jsmcts">here</a> (desktop browser recommended).
-
 ![checkers](./images/checkers.png)
 
 Simulations can also be run on the command line using <a href="https://nodejs.org">Node.js</a>, pitting two MCTS players against each other, or a MCTS player against a random player or heuristic player.
