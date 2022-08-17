@@ -238,9 +238,9 @@ currentTurn 2 currentPlayer 2
 ...
 .X.
 O..
-```
-<center>&#8942;</center>
-```
+
+[...]
+
 currentTurn 9 currentPlayer 1
 [0 trials; 0 msecs]
 * 3 NaN (0/0)
