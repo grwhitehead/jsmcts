@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+
+    <meta http-equiv="content-type" content="application/xhtml+xml; charset=UTF-8" />
+    <meta name="author" content="Counterwave" />
+    <meta name="description" content="Counterwave Games" />
+    <meta name="keywords" content="counterwave games" />
+    <meta name="robots" content="index, follow, noarchive" />
+    <meta name="googlebot" content="noarchive" />
+
+    <title>Connect Four</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this site -->
+    <link href="css/site.css" rel="stylesheet">
+    <style>
+.board { margin: auto; max-width: 300px; padding-top: 10px; padding-bottom: 10px; }
+.cell { margin: 2px; width: 38px; height: 38px; padding: 10px; border: 4px solid lightgray; background-color: lightgray; text-align: center; font-size: 75%; cursor: default; }
+.marked1 { border: 4px solid green; background-color: green; }
+.marked2 { border: 4px solid blue; background-color: blue; }
+.hilite { background-color: yellow; border: 4px solid yellow; cursor: pointer; }
+.movehilite { outline: 2px dashed black; }
+.hidetext { color: transparent; }
+    </style>
+  </head>
+
+  <body>
+    <div class="container">
+        <h2 class="text-center">Connect Four</h3>
+
+        <h3 id="msg" class="text-center"></h3>
+
+        <div id="board" class="board" align="center"></div>
+
+        <div id="searchdata" style="width: 100%; max-width: 400px; margin: auto;"></div>
+
+        <div id="settings" align="center">
+          Max search trials <select id="maxtrials">
+<option value="1000" selected>1000</option>
+<option value="10000">10000</option>
+<option value="100000">100000</option>
+<option value="200000">200000</option>
+          </select>
+          <br/>
+          Max search time <select id="maxtime">
+<option value="1000" selected>1 sec</option>
+<option value="10000">10 sec</option>
+<option value="20000">20 sec</option>
+          </select>
+<!--
+          <br/>
+          <input id="hidecellnumbers" type="checkbox"> Hide cell numbers
+-->
+          <hr width="100px"/>
+          Computer <select id="computerplayer">
+<option value="1">Player 1</option>
+<option value="2" selected>Player 2</option>
+          </select>
+          <br/>
+          <button id="newgame">New Game</button>
+        </div>
+        <div>
+          <h3 id="howtoplay">HOW TO PLAY</h3>
+          <p>Play <a target="_new" href="https://en.wikipedia.org/wiki/Connect_Four">Connect Four</a> against the computer.</p>
+          <p>Player one is GREEN and player two is BLUE. By default you are player one and the computer is player two, but that can be swapped when starting a new game.</p>
+          <p>When you hover over a cell that can be marked it is highlighted in YELLOW. Click on a highlighted cell to make your mark. Try to get four adjacent marks in a row, column, or along a diagonal. Cells must be filled from the bottom up in each column.</p>
+          <p>After you move, the computer will "think" and then make its move. The computer's move will be highligted with a dashed BLACK outline.</p>
+          <p>The computer uses <a target="_new" href="https://github.com/grwhitehead/jsmcts">JSMCTS</a>, a javascript implementation of Monte Carlo Tree Search (MCTS) that runs in the browser, to select a move. It displays the moves it is evaluating and what percentage of the time those moves lead to a win. The number of trials it runs and the amount of time it has to run them can be controlled.</p>
+          <p>Repository: <a href="https://github.com/grwhitehead/jsmcts">https://github.com/grwhitehead/jsmcts</a></p>
+        </div>
+        <div>
+            <p class="text-center">Copyright 2022 Greg Whitehead<br/>MIT License</p>
+        </div>
+    </div> <!-- /container -->
+
+    <script src="http://code.jquery.com/jquery-1.12.0.min.js"></script>
+    <script src="http://code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
+    <script src="js/nodehack.js"></script>
+    <script src="js/mcts.js"></script>
+    <script src="js/connectfour.js"></script>
+    <script>
+      const mcts = require('mcts');
+      const game = require('connectfour');
+
+      var humanPlayer = 1;
+      var computerPlayer = 2;
+
+      var maxTrials = 1000;
+      var maxTime = 1000;
+      var g, p;
+      var board, cells;
+      var timer;
+
+      function newGame(cp) {
+        window.clearTimeout(timer);
+        $('#msg').html("");
+        $('#board').html("");
+        $('#searchdata').html("");
+          
+        computerPlayer = cp;
+        humanPlayer = (cp%2)+1;
+
+        g = new game.Game();
+        p = new mcts.MCTSPlayer(maxTrials);
+        p.searchCallback = function(state) {
+          var data = "["+state.root.count+" trials; "+state.time+" msecs]\n";
+          for (var i = 0; i < state.root.children.length; i++) {
+            var n = state.root.children[i];
+            data += (n === state.best?"*":" ")+" "+n.toString()+"\n";
+          }
+          if (state.best) {
+            data += "avgSearchDepth "+state.avgSearchDepth.toFixed(4)+
+                    "\navgGameDepth "+state.avgGameDepth.toFixed(4)+
+                    "\n";
+          }
+          $("#searchdata").html("<pre>"+data+"</pre>");
+        };
+        var board = "<table>";
+        for (var i = 0; i < 6; i++) {
+          board += "<tr>";
+          for (var j = 0; j < 7; j++) {
+            board += "<td><div class='cell'>"+(1+i*7+j)+"</div></td>";
+          }
+          board += "</tr>";
+        }
+        board += "</table>";
+        $('#board').html(board);
+        $('#maxtrials').change(function(){
+          maxTrials = $(this).val();
+          p.nTrials = maxTrials;
+        });
+        cells = $(document).find(".cell");
+        for (var i = 0; i < cells.length; i++) {
+          $(cells[i]).data("pos", 1+i);
+          if (g.board[i] == 1) $(cells[i]).addClass("marked1");
+          if (g.board[i] == 2) $(cells[i]).addClass("marked2");
+        }
+        $(".cell").hover(function () {
+          if (g.currentPlayer == humanPlayer) {
+            for (var i = 0; i < g.currentActions.length; i++) {
+              var a = g.currentActions[i];
+              if ($(this).data("pos") == a.pos) {
+                $(this).addClass("hilite");
+                break;
+              }
+            }
+          }
+        }, function () {
+          $(this).removeClass("hilite");
+        });
+        $(".cell").click(function() {
+          if (g.currentPlayer == humanPlayer) {
+            for (var i = 0; i < g.currentActions.length; i++) {
+              var a = g.currentActions[i];
+              if ($(this).data("pos") == a.pos) {
+                $(document).find(".cell").removeClass("hilite movehilite");
+                $(this).addClass("marked"+humanPlayer);
+                g.doAction(a);
+                play_continue();
+                return;
+              }
+            }
+          }
+        });
+        play_continue();
+      }
+
+      function play_continue() {
+        g.currentActions = g.allActions();
+        window.setTimeout(function() {
+          if (g.isGameOver()) {
+            if (g.winner == humanPlayer) {
+              $("#msg").text("Game Over: You Win");
+            } else if (g.winner == computerPlayer) {
+              $("#msg").text("Game Over: Computer Wins");
+            } else if (g.winner == 0) {
+              $("#msg").text("Game Over: Draw");
+            }
+          } else if (g.currentPlayer == humanPlayer) {
+            $("#msg").text("Your Move");
+          } else if (g.currentPlayer == computerPlayer) {
+            $("#msg").text("Thinking...");
+            computerMove();
+          }
+        }, 200);
+      }
+
+      function computerMove() {
+        var state = p.startThinking(g);
+        state.startTime = Date.now();
+        window.setTimeout(function() {
+          computerMove_continue(state)
+        }, 0);
+      }
+      function computerMove_continue(state) {
+        var now = Date.now();
+        if (now-state.startTime < maxTime && p.continueThinking(state, 1000)) {
+          $("#msg").text("Thinking... ("+Math.ceil((maxTime-(now-state.startTime))/1000)+"s)");
+          window.setTimeout(function() {
+            computerMove_continue(state)
+          }, 0);
+          return;
+        }
+        var a = p.stopThinking(state);
+        $(cells[a.pos-1]).addClass("marked"+computerPlayer);
+        $(cells[a.pos-1]).addClass("movehilite");
+        g.doAction(a);
+        play_continue();
+      }
+
+      $('#maxtime').change(function(){
+        maxTime = $(this).val();
+      });
+      $('#hidecellnumbers').change(function(){
+        if ($(this).prop('checked')) {
+          $('.cell').addClass('hidetext');
+        } else {
+          $('.cell').removeClass('hidetext');
+        }
+      });
+      $('#newgame').click(function() {
+        newGame($('#computerplayer').val());
+      });
+
+      newGame(2);
+    </script>
+
+  </body>
+</html>

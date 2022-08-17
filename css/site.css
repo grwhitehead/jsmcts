@@ -1,0 +1,16 @@
+@media screen and (min-aspect-ratio: 150/100) {
+  .container {
+   width: 60%;
+  }
+}
+
+@media screen and (max-aspect-ratio: 149/100) and (min-aspect-ratio: 130/100) {
+  .container {
+    width: 75%;
+  }
+}
+
+.row {
+    padding: 0;
+    margin: 0;
+}
