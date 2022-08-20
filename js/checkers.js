@@ -27,13 +27,6 @@
 const mcts = require('mcts');
 
 
-function arrayContains(a, x) {
-    for (var i = 0; i < a.length; i++) {
-        if (a[i] == x) return 1;
-    }
-    return 0;
-}
-
 exports.Action = function(f, j, p) {
     mcts.Action.call(this);
 
@@ -64,16 +57,6 @@ exports.Game = function() {
                   2, 0, 2, 0, 2, 0, 2, 0,
                   0, 2, 0, 2, 0, 2, 0, 2,
                   2, 0, 2, 0, 2, 0, 2, 0];
-    /* multiple jump paths
-    this.board = [0, 1, 0, 1, 0, 1, 0, 1,
-                  1, 0, 1, 0, 1, 0, 1, 0,
-                  0, 1, 0, 5, 0, 1, 0, 1,
-                  0, 0, 2, 0, 2, 0, 0, 0,
-                  0, 0, 0, 0, 0, 0, 0, 0,
-                  2, 0, 2, 0, 2, 0, 2, 0,
-                  0, 2, 0, 0, 0, 2, 0, 0,
-                  2, 0, 2, 0, 2, 0, 2, 0];
-    */
 
     this.jumping = 0;
 
@@ -84,11 +67,13 @@ exports.Game = function() {
 exports.Game.prototype = Object.create(mcts.Game.prototype);
 
 exports.Game.prototype.copyGame = function() {
+    // javascript doesn't have copy constructors, so we just duplicate the parent code
     var g = new exports.Game();
     g.nPlayers = this.nPlayers;
     g.currentTurn = this.currentTurn;
     g.currentPlayer = this.currentPlayer;
     g.winner = this.winner;
+    
     g.board = this.board.slice();
     g.jumping = this.jumping;
     g.lastDrawAvoidingTurn = this.lastDrawAvoidingTurn;
