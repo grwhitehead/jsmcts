@@ -54,11 +54,12 @@ exports.Game = function() {
 exports.Game.prototype = Object.create(mcts.Game.prototype);
 
 exports.Game.prototype.copyGame = function() {
+    // javascript doesn't have copy constructors, so we just duplicate the parent code
     var g = new exports.Game();
-    g.nPlayers = this.nPlayers;
     g.currentTurn = this.currentTurn;
     g.currentPlayer = this.currentPlayer;
     g.winner = this.winner;
+    
     g.board = this.board.slice();
     return g;
 };
