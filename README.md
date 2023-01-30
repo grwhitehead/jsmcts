@@ -22,17 +22,17 @@ in IEEE Transactions on Computational Intelligence and AI in Games, vol. 4, no. 
 https://doi.org/10.1109/TCIAIG.2012.2186810
 
 JSMCTS uses Upper Confidence Bounds for Trees (UCT) to guide exploration of the game tree and random playout to evaluate moves.
+Determinization is implemented for nondeterministic games using a seedable psuedo random number generator (xorshift128+).
 
 ## Examples
 
-Three example games are provided (<a href="https://grwhitehead.github.io/jsmcts">play in your web browser here</a>):
+Four example games are provided that you can <a href="https://grwhitehead.github.io/jsmcts">play in your web browser</a>:
 * Tic-Tac-Toe
 * Connect Four
 * Checkers
+* Backgammon
 
 ### Game Implementation
-
-Note: This version of JSMCTS does not support non-deterministic games with chance elements such as dice rolls or shuffled decks of cards.
 
 [See js/tictactoe.js for full details]
 
@@ -52,11 +52,17 @@ Subclass Game and define your game state.
 For Tic-Tac-Toe we define the 3x3 board as an array.
 ```
 exports.Game = function() {
-    mcts.Game.call(this, 2);
-
-    this.board = [0, 0, 0,
-                  0, 0, 0,
-                  0, 0, 0];
+    if (o instanceof exports.Game) {
+        // copy game
+        mcts.Game.call(this, o);
+        this.board = o.board.slice();
+    } else {
+        // initialize new game
+        mcts.Game.call(this, { nPlayers: 2 });
+        this.board = [0, 0, 0,
+                      0, 0, 0,
+                      0, 0, 0];
+    }
 };
 
 exports.Game.prototype = Object.create(mcts.Game.prototype);
@@ -114,6 +120,43 @@ exports.Game.prototype.doAction = function(a) {
         } else {
             this.currentTurn++;
             this.currentPlayer = (this.currentPlayer%2)+1
+        }
+    }
+};
+```
+
+#### Nondeterministic Games
+
+[See js/backgammon.js for full details]
+
+Pass `nondeterministic: true` to the mcts.Game constructor and use `this.rng.random()` for chance elements in your implementation.
+
+```
+exports.Game = function(o) {
+    if (o instanceof exports.Game) {
+        // copy game
+        mcts.Game.call(this, o);
+        
+        ...
+        
+    } else {
+        // initialize new game
+        mcts.Game.call(this, { nondeterministic: true, nPlayers: 2 });
+        
+        ...
+        
+        while (true) {
+            this.roll = [Math.ceil(6*this.rng.random()), Math.ceil(6*this.rng.random())];
+            if (this.roll[0] != this.roll[1]) break;
+        }
+        this.moves = this.roll.slice();
+        this.first = (o && o.first)?o.first:1;
+        if (this.first > 0) {
+            this.currentPlayer = this.first;
+        } else if (this.roll[0] > this.roll[1]) {
+            this.currentPlayer = 1;
+        } else {
+            this.currentPlayer = 2;
         }
     }
 };
@@ -268,6 +311,6 @@ On MacOS:
 % npm install optparse
 ```
 
-Copyright (c) 2022 Greg Whitehead
+Copyright (c) 2022-2023 Greg Whitehead
 
 MIT License

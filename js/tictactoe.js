@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2022 Greg Whitehead
+ * Copyright (c) 2022-2023 Greg Whitehead
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -39,25 +39,24 @@ exports.Action.prototype.toString = function() {
     return ""+this.pos;
 };
 
-exports.Game = function() {
-    mcts.Game.call(this, 2);
-
-    this.board = [0, 0, 0,
-                  0, 0, 0,
-                  0, 0, 0];
+exports.Game = function(o) {
+    if (o instanceof exports.Game) {
+        // copy game
+        mcts.Game.call(this, o);
+        this.board = o.board.slice();
+    } else {
+        // initialize new game
+        mcts.Game.call(this, { nPlayers: 2 });
+        this.board = [0, 0, 0,
+                      0, 0, 0,
+                      0, 0, 0];
+    }
 };
 
 exports.Game.prototype = Object.create(mcts.Game.prototype);
 
 exports.Game.prototype.copyGame = function() {
-    // javascript doesn't have copy constructors, so we just duplicate the parent code
-    var g = new exports.Game();
-    g.currentTurn = this.currentTurn;
-    g.currentPlayer = this.currentPlayer;
-    g.winner = this.winner;
-
-    g.board = this.board.slice();
-    return g;
+    return new exports.Game(this);
 };
 
 exports.Game.prototype.toString = function() {

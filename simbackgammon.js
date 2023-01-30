@@ -23,8 +23,9 @@
  */
 
 const optparse = require('optparse');
+const stats = require("stats");
 const mcts = require("mcts");
-const game = require("tictactoe");
+const game = require("backgammon");
 
 var switches = [
     ['-n', '--nruns NUMBER', 'Number of runs'],
@@ -33,17 +34,16 @@ var switches = [
 
 var availablePlayers = {
     "random": function() { return new mcts.RandomPlayer(); },
-    "mcts10": function() { return new mcts.MCTSPlayer({ nTrials: 10 }); },
-    "mcts100": function() { return new mcts.MCTSPlayer({ nTrials: 100 }); },
-    "mcts1000": function() { return new mcts.MCTSPlayer({ nTrials: 1000 }); },
-    "mcts10000": function() { return new mcts.MCTSPlayer({ nTrials: 10000 }); },
-    "mcts100000": function() { return new mcts.MCTSPlayer({ nTrials: 100000 }); },
-    "perfect": function() { return new game.PerfectPlayer(); }
+    "mcts10": function() { return new mcts.MCTSPlayer({ nTrials: 10, nTrialsPerSeed: 1 }); },
+    "mcts100": function() { return new mcts.MCTSPlayer({ nTrials: 100, nTrialsPerSeed: 10 }); },
+    "mcts1000": function() { return new mcts.MCTSPlayer({ nTrials: 1000, nTrialsPerSeed: 100 }); },
+    "mcts10000": function() { return new mcts.MCTSPlayer({ nTrials: 10000, nTrialsPerSeed: 100 }); },
+    "mcts100000": function() { return new mcts.MCTSPlayer({ nTrials: 100000, nTrialsPerSeed: 100 }); }
 };
 
 var parser = new optparse.OptionParser(switches);
 
-parser.banner = 'Usage: ./run.sh simtictactoe.js [options]';
+parser.banner = 'Usage: ./run.sh simbackgammon.js [options]';
 
 var nruns = 1;
 parser.on('nruns', function(opt, value) {
@@ -65,7 +65,6 @@ if (players.length == 0) {
 
 
 var wins = [0, 0, 0];
-
 for (var n = 1; n <= nruns; n++) {
     console.log("run "+n);
 

@@ -76,7 +76,7 @@
           <p>Repository: <a href="https://github.com/grwhitehead/jsmcts">https://github.com/grwhitehead/jsmcts</a></p>
         </div>
         <div>
-            <p class="text-center">Copyright 2022 Greg Whitehead<br/>MIT License</p>
+            <p class="text-center">Copyright 2022-2023 Greg Whitehead<br/>MIT License</p>
         </div>
     </div> <!-- /container -->
 
@@ -108,7 +108,7 @@
         humanPlayer = (cp%2)+1;
           
         g = new game.Game();
-        p = new mcts.MCTSPlayer(maxTrials);
+        p = new mcts.MCTSPlayer({ nTrials: maxTrials });
         p.searchCallback = function(state) {
           var data = "["+state.root.count+" trials; "+state.time+" msecs]\n";
           for (var i = 0; i < state.root.children.length; i++) {
@@ -118,6 +118,7 @@
           if (state.best) {
             data += "avgSearchDepth "+state.avgSearchDepth.toFixed(4)+
                     "\navgGameDepth "+state.avgGameDepth.toFixed(4)+
+                    "\navgBranchingFactor "+state.avgBranchingFactor.toFixed(4)+
                     "\n";
           }
           $("#searchdata").html("<pre>"+data+"</pre>");

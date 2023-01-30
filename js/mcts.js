@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2022 Greg Whitehead
+ * Copyright (c) 2022-2023 Greg Whitehead
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,6 +26,99 @@
 
 
 /*
+ * Seedable PRNG
+ *
+ * xorshift128+
+ *
+ * https://xoshiro.di.unimi.it/xorshift.php
+ * https://xoshiro.di.unimi.it/xorshift128plus.c
+ *
+ * Javascript port from Andreas Madsen
+ * https://github.com/AndreasMadsen/xorshift
+ */
+
+exports.PRNGSeed = function() {
+    // seed must not be zero
+    while (true) {
+        this.seed0U = Math.random()*2**32 >>> 0;
+        this.seed0L = Math.random()*2**32 >>> 0;
+        this.seed1U = Math.random()*2**32 >>> 0;
+        this.seed1L = Math.random()*2**32 >>> 0;
+        if (this.seed0U > 0 || this.seed0L > 0 || this.seed1U > 0 || this.seed1L > 0) break;
+    }
+}
+
+exports.PRNG = function(seed) {
+    if (seed == undefined) seed = new exports.PRNGSeed();
+    this._state0U = seed.seed0U;
+    this._state0L = seed.seed0L;
+    this._state1U = seed.seed1U;
+    this._state1L = seed.seed1L;
+};
+
+exports.PRNG.prototype.random = function() {
+    // uint64_t s1 = s[0]
+    var s1U = this._state0U, s1L = this._state0L;
+    // uint64_t s0 = s[1]
+    var s0U = this._state1U, s0L = this._state1L;
+    
+    // result = s0 + s1
+    var sumL = (s0L >>> 0) + (s1L >>> 0);
+    var resU = (s0U + s1U + (sumL / 2 >>> 31)) >>> 0;
+    var resL = sumL >>> 0;
+    
+    // s[0] = s0
+    this._state0U = s0U;
+    this._state0L = s0L;
+    
+    // - t1 = [0, 0]
+    var t1U = 0, t1L = 0;
+    // - t2 = [0, 0]
+    var t2U = 0, t2L = 0;
+    
+    // s1 ^= s1 << 23;
+    // :: t1 = s1 << 23
+    var a1 = 23;
+    var m1 = 0xFFFFFFFF << (32 - a1);
+    t1U = (s1U << a1) | ((s1L & m1) >>> (32 - a1));
+    t1L = s1L << a1;
+    // :: s1 = s1 ^ t1
+    s1U = s1U ^ t1U;
+    s1L = s1L ^ t1L;
+    
+    // t1 = ( s1 ^ s0 ^ ( s1 >> 17 ) ^ ( s0 >> 26 ) )
+    // :: t1 = s1 ^ s0
+    t1U = s1U ^ s0U;
+    t1L = s1L ^ s0L;
+    // :: t2 = s1 >> 18
+    var a2 = 18;
+    var m2 = 0xFFFFFFFF >>> (32 - a2);
+    t2U = s1U >>> a2;
+    t2L = (s1L >>> a2) | ((s1U & m2) << (32 - a2));
+    // :: t1 = t1 ^ t2
+    t1U = t1U ^ t2U;
+    t1L = t1L ^ t2L;
+    // :: t2 = s0 >> 5
+    var a3 = 5;
+    var m3 = 0xFFFFFFFF >>> (32 - a3);
+    t2U = s0U >>> a3;
+    t2L = (s0L >>> a3) | ((s0U & m3) << (32 - a3));
+    // :: t1 = t1 ^ t2
+    t1U = t1U ^ t2U;
+    t1L = t1L ^ t2L;
+    
+    // s[1] = t1
+    this._state1U = t1U;
+    this._state1L = t1L;
+    
+    // return result normalized [0,1)
+    // Math.pow(2, -32) = 2.3283064365386963e-10
+    // Math.pow(2, -52) = 2.220446049250313e-16
+    return resU * 2.3283064365386963e-10 + (resL >>> 12) * 2.220446049250313e-16;
+};
+
+
+/*
  * base classes for MCTS games (see example code)
  */
 
@@ -37,20 +130,30 @@ exports.Action.prototype.toString = function() {
 };
 
 
-exports.Game = function(nPlayers) {
-    this.nPlayers = nPlayers;
-
-    this.currentTurn = 1;
-    this.currentPlayer = 1;
-    this.winner = -1;
+exports.Game = function(o, rng) {
+    if (o instanceof exports.Game) {
+        // copy game
+        this.nondeterministic = o.nondeterministic;
+        this.nPlayers = o.nPlayers;
+        this.currentTurn = o.currentTurn;
+        this.currentPlayer = o.currentPlayer;
+        this.winner = o.winner;
+    } else {
+        // initialize new game
+        this.nondeterministic = o.nondeterministic;
+        this.nPlayers = o.nPlayers;
+        this.currentTurn = 1;
+        this.currentPlayer = 1;
+        this.winner = -1;
+    }
+    if (this.nondeterministic) {
+        if (rng == undefined) rng = new exports.PRNG();
+        this.rng = rng;
+    }
 };
 
-exports.Game.prototype.copyGame = function() {
-    var g = new exports.Game(this.nPlayers);
-    g.currentTurn = this.currentTurn;
-    g.currentPlayer = this.currentPlayer;
-    g.winner = this.winner;
-    return g;
+exports.Game.prototype.copyGame = function(rng) {
+    return new exports.Game(this, rng);
 };
 
 exports.Game.prototype.toString = function() {
@@ -109,7 +212,7 @@ exports.MCTSNode = function(g, a) {
     this.player = g.currentPlayer;
     this.action = a;
     this.count = 0;
-    this.values = new Array(g.nPlayers).fill(0);
+    this.values = new Array(g.nPlayers).fill(0.0);
     this.children = null;
 
     this.cumSearchDepth = 0;
@@ -144,24 +247,44 @@ exports.MCTSNode.prototype.selectChild = function(c) {
     return sa;
 };
 
-exports.MCTSNode.prototype.updateValue = function(pi, v) {
-    this.count++;
-    this.values[pi-1] += v;
-};
-
-exports.MCTSNode.prototype.updateValues = function(v) {
+exports.MCTSNode.prototype.updateValues = function(rewards) {
     this.count++;
     for (var i = 0; i < this.values.length; i++) {
-      this.values[i] += v;
+      this.values[i] += rewards[i];
     }
 };
 
 
-exports.MCTSPlayer = function(nTrials) {
+exports.MCTSPlayer = function(config) {
     exports.Player.call(this);
-    this.nTrials = nTrials;
+    this.nTrials = config.nTrials;
+    
+    // determinization for nondeterministic games (use same PRNG seed for nTrialsPerSeed before switching)
+    this.nTrialsPerSeed = config.nTrialsPerSeed?config.nTrialsPerSeed:1;
 
-    this.C = 1.0; // see MCTSNode selectChild
+    // exploration constant, see MCTSNode selectChild
+    if (config.c == undefined) {
+        this.c = 1.0;
+    } else {
+        this.c = config.c;
+    }
+
+    // calculate rewards
+    if (config.rewardsFunc == undefined) {
+        this.rewardsFunc = function(g) {
+            if (g.winner > 0) {
+                var rewards = new Array(g.nPlayers).fill(0.0);
+                if (g.winner <= g.nPlayers) {
+                    rewards[g.winner-1] = 1.0;
+                }
+                return rewards;
+            } else {
+                return new Array(g.nPlayers).fill(0.5);
+            }
+        };
+    } else {
+        this.rewardsFunc = config.rewardsFunc;
+    }
 };
 
 exports.MCTSPlayer.prototype = Object.create(exports.Player.prototype);
@@ -187,10 +310,16 @@ exports.MCTSPlayer.prototype.getAction = function(g) {
  * stopThinking - return best action found so far
  */
 exports.MCTSPlayer.prototype.startThinking = function(g) {
-    var state = { game: g, turn: g.currentTurn, root: new exports.MCTSNode(g, null), best: null, time: 0, avgSearchDepth: 0, avgGameDepth: 0 };
+    var state = { game: g, turn: g.currentTurn, root: new exports.MCTSNode(g, null), best: null, time: 0, avgSearchDepth: 0, avgGameDepth: 0, avgBranchingFactor: 0 };
     var root = state.root;
+    root.cumSearchDepth = 0;
+    root.cumGameDepth = 0;
+    root.parentNodeCount = 0;
+    root.totalNodeCount = 1;
     if (!root.children) {
         root.children = g.allActions().map(function (a) { return new exports.MCTSNode(g, a) });
+        root.parentNodeCount += 1;
+        root.totalNodeCount += root.children.length;
     }
     if (this.searchCallback) {
         this.searchCallback(state);
@@ -207,48 +336,71 @@ exports.MCTSPlayer.prototype.continueThinking = function(state, nt) {
     var t1 = Math.min(this.nTrials, root.count+nt);
     var time0 = Date.now();
     for (var t = t0; t < t1; t++) {
-        var tg = g.copyGame(); // copy current game state for new trial
+        var tg; // copy current game state for new trial
+        if (g.nondeterministic) {
+            // use determinization, running nTrialsPerSeed with the same PRNG seed
+            if (root.count % this.nTrialsPerSeed == 0) {
+                state.seed = new exports.PRNGSeed();
+                if (root.children) {
+                    // subtree node states potentially change with each seed, so we
+                    // clear the children of the top-level actions on seed change
+                    // (top-level values will be an average over all trials)
+                    for (var i = 0; i < root.children.length; i++) {
+                        root.children[i].children = null;
+                    }
+                }
+            }
+            tg = g.copyGame(new exports.PRNG(state.seed));
+        } else {
+            tg = g.copyGame();
+        }
         var vns = [root]; // track visited nodes
         // select next child to explore
-        var n = root.selectChild(this.C);
+        var n = root.selectChild(this.c);
         vns.push(n);
         tg.doAction(n.action);
+        var depth = 1;
         // repeat to frontier of explored game tree
         while (!tg.isGameOver() && n.children) {
-            n = n.selectChild(this.C);
+            n = n.selectChild(this.c);
             vns.push(n);
             tg.doAction(n.action);
+            depth += 1;
         }
         // if game isn't over, expand frontier node and select a child to explore
         if (!tg.isGameOver()) {
             n.children = tg.allActions().map(function (a) { return new exports.MCTSNode(tg, a) });
-            n = n.selectChild(this.C);
+            root.parentNodeCount += 1;
+            root.totalNodeCount += n.children.length;
+            n = n.selectChild(this.c);
             vns.push(n);
             tg.doAction(n.action);
+            depth += 1;
         }
-        var searchDepth = tg.currentTurn;
+        var searchDepth = depth;
         // random playout to end of game
         while (!tg.isGameOver()) {
             var rp_as = tg.allActions();
+            root.parentNodeCount += 1;
+            root.totalNodeCount += rp_as.length;
             var rp_a = rp_as[Math.floor(Math.random()*rp_as.length)];
             tg.doAction(rp_a);
+            depth += 1;
         }
-        var gameDepth = tg.currentTurn;
+        var gameDepth = depth;
         // apply rewards to visited nodes
+        var rewards = this.rewardsFunc(tg);
         for (var i = 0; i < vns.length; i++) {
-            if (tg.winner > 0) {
-                vns[i].updateValue(tg.winner, 1.0);
-            } else {
-                vns[i].updateValues(0.5);
-            }
-            vns[i].cumSearchDepth += searchDepth;
-            vns[i].cumGameDepth += gameDepth;
+            vns[i].updateValues(rewards);
         }
+        root.cumSearchDepth += searchDepth;
+        root.cumGameDepth += gameDepth;
     }
     state.time += Date.now()-time0;
     if (root.count > 0) {
-        state.avgSearchDepth = (1.0*root.cumSearchDepth/root.count)-state.turn+1;
-        state.avgGameDepth = (1.0*root.cumGameDepth/root.count)-state.turn+1;
+        state.avgSearchDepth = (1.0*root.cumSearchDepth/root.count);
+        state.avgGameDepth = (1.0*root.cumGameDepth/root.count);
+        state.avgBranchingFactor = 1.0*(root.totalNodeCount-1)/root.parentNodeCount;
     }
     if (this.searchCallback) {
         this.searchCallback(state);
@@ -277,18 +429,20 @@ exports.searchCallback = function(state) {
         }
         console.log("avgSearchDepth "+state.avgSearchDepth.toFixed(4)+
                     "\navgGameDepth "+state.avgGameDepth.toFixed(4)+
+                    "\navgBranchingFactor "+state.avgBranchingFactor.toFixed(4)+
                     "\n");
     }
 }
 
 
 exports.playgame = function(g, ps) {
-    while (!g.isGameOver()) {
-        console.log(g.toString());
-        var a = ps[g.currentPlayer-1].getAction(g);
-        g.doAction(a);
-    }
     console.log(g.toString());
+    while (!g.isGameOver()) {
+        var a = ps[g.currentPlayer-1].getAction(g);
+        console.log(a.toString());
+        g.doAction(a);
+        console.log(g.toString());
+    }
 }
 
 

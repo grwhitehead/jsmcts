@@ -81,7 +81,7 @@
           <p>Repository: <a href="https://github.com/grwhitehead/jsmcts">https://github.com/grwhitehead/jsmcts</a></p>
         </div>
         <div>
-            <p class="text-center">Copyright 2022 Greg Whitehead<br/>MIT License</p>
+            <p class="text-center">Copyright 2022-2023 Greg Whitehead<br/>MIT License</p>
         </div>
     </div> <!-- /container -->
 
@@ -102,6 +102,10 @@
       var g, p;
       var board, cells;
       var timer;
+      
+      var prevSearchDataTurn = 0;
+      var prevSearchData = "";
+      var currSearchData = "";
 
       function rotateBoard() {
         $("#board table tbody tr").each(function(elem,index){
@@ -126,7 +130,7 @@
         humanPlayer = (cp%2)+1;
 
         g = new game.Game();
-        p = new mcts.MCTSPlayer(maxTrials);
+        p = new mcts.MCTSPlayer({ nTrials: maxTrials });
         p.searchCallback = function(state) {
           var data = "["+state.root.count+" trials; "+state.time+" msecs]\n";
           for (var i = 0; i < state.root.children.length; i++) {
@@ -136,9 +140,11 @@
           if (state.best) {
             data += "avgSearchDepth "+state.avgSearchDepth.toFixed(4)+
                     "\navgGameDepth "+state.avgGameDepth.toFixed(4)+
+                    "\navgBranchingFactor "+state.avgBranchingFactor.toFixed(4)+
                     "\n";
           }
-          $("#searchdata").html("<pre>"+data+"</pre>");
+          currSearchData = data;
+          $("#searchdata").html("<pre>"+prevSearchData+currSearchData+"</pre>");
         };
         board = "<table>";
         for (var i = 0; i < 8; i++) {
@@ -183,6 +189,7 @@
         });
         $(".cell").click(function() {
           if (g.currentPlayer == humanPlayer) {
+            $(document).find(".cell").removeClass("movehilite");
             var as = g.allActions();
             if (from) {
               for (var i = 0; i < as.length; i++) {
@@ -246,6 +253,12 @@
             $("#msg").text("Your Move");
           } else if (g.currentPlayer == computerPlayer) {
             $("#msg").text("Thinking...");
+            if (prevSearchDataTurn < g.currentTurn) {
+                prevSearchDataTurn = g.currentTurn;
+                prevSearchData = "";
+            } else {
+                prevSearchData += currSearchData+"\n";
+            }
             computerMove();
           }
         }, 200);

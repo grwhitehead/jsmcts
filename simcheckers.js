@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2022 Greg Whitehead
+ * Copyright (c) 2022-2023 Greg Whitehead
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -33,10 +33,11 @@ var switches = [
 
 var availablePlayers = {
     "random": function() { return new mcts.RandomPlayer(); },
-    "mcts10": function() { return new mcts.MCTSPlayer(10); },
-    "mcts100": function() { return new mcts.MCTSPlayer(100); },
-    "mcts1000": function() { return new mcts.MCTSPlayer(1000); },
-    "mcts10000": function() { return new mcts.MCTSPlayer(10000); }
+    "mcts10": function() { return new mcts.MCTSPlayer({ nTrials: 10 }); },
+    "mcts100": function() { return new mcts.MCTSPlayer({ nTrials: 100 }); },
+    "mcts1000": function() { return new mcts.MCTSPlayer({ nTrials: 1000 }); },
+    "mcts10000": function() { return new mcts.MCTSPlayer({ nTrials: 10000 }); },
+    "mcts100000": function() { return new mcts.MCTSPlayer({ nTrials: 100000 }); }
 };
 
 var parser = new optparse.OptionParser(switches);
@@ -62,7 +63,7 @@ if (players.length == 0) {
 }
 
 
-wins = [0, 0, 0];
+var wins = [0, 0, 0];
 
 for (var n = 1; n <= nruns; n++) {
     console.log("run "+n);
