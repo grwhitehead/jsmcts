@@ -51,7 +51,7 @@ exports.Action.prototype = Object.create(mcts.Action.prototype);
 Subclass Game and define your game state.
 For Tic-Tac-Toe we define the 3x3 board as an array.
 ```
-exports.Game = function() {
+exports.Game = function(o) {
     if (o instanceof exports.Game) {
         // copy game
         mcts.Game.call(this, o);
@@ -268,8 +268,9 @@ currentTurn 1 currentPlayer 1
   7 0.62 (53.5/86)
   8 0.60 (45/75)
   9 0.70 (119.5/170)
-avgSearchDepth 5.5800
-avgGameDepth 7.5720
+avgSearchDepth 4.5500
+avgGameDepth 7.5550
+avgBranchingFactor 3.7995
 
 ...
 .X.
@@ -287,6 +288,7 @@ currentTurn 9 currentPlayer 1
 * 3 NaN (0/0)
 avgSearchDepth 0.0000
 avgGameDepth 0.0000
+avgBranchingFactor 0.0000
 
 XOX
 XXO
