@@ -67,7 +67,7 @@ if (players.length == 0) {
 var wins = [0, 0, 0];
 
 for (var n = 1; n <= nruns; n++) {
-    console.log("run "+n);
+    console.log("\nrun "+n);
 
     var g = new game.Game();
 
