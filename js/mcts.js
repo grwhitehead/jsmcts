@@ -260,7 +260,7 @@ exports.MCTSPlayer = function(config) {
     this.nTrials = config.nTrials;
     
     // determinization for nondeterministic games (use same PRNG seed for nTrialsPerSeed before switching)
-    this.nTrialsPerSeed = config.nTrialsPerSeed?config.nTrialsPerSeed:1;
+    this.nTrialsPerSeed = config.nTrialsPerSeed;
 
     // exploration constant, see MCTSNode selectChild
     if (config.c == undefined) {
@@ -337,7 +337,7 @@ exports.MCTSPlayer.prototype.continueThinking = function(state, nt) {
     var time0 = Date.now();
     for (var t = t0; t < t1; t++) {
         var tg; // copy current game state for new trial
-        if (g.nondeterministic) {
+        if (g.nondeterministic && this.nTrialsPerSeed) {
             // use determinization, running nTrialsPerSeed with the same PRNG seed
             if (root.count % this.nTrialsPerSeed == 0) {
                 state.seed = new exports.PRNGSeed();

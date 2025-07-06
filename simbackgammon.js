@@ -23,7 +23,6 @@
  */
 
 const optparse = require('optparse');
-const stats = require("stats");
 const mcts = require("mcts");
 const game = require("backgammon");
 

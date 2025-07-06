@@ -132,10 +132,10 @@ exports.Game.prototype.doAction = function(a) {
 Pass `nondeterministic: true` to the mcts.Game constructor and use `this.rng.random()` for chance elements in your implementation.
 
 ```
-exports.Game = function(o) {
+exports.Game = function(o, rng) {
     if (o instanceof exports.Game) {
         // copy game
-        mcts.Game.call(this, o);
+        mcts.Game.call(this, o, rng);
         
         ...
         

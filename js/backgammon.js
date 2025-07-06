@@ -46,10 +46,10 @@ exports.Action.prototype.toString = function() {
     return s;
 };
 
-exports.Game = function(o) {
+exports.Game = function(o, rng) {
     if (o instanceof exports.Game) {
         // copy game
-        mcts.Game.call(this, o);
+        mcts.Game.call(this, o, rng);
         this.track1 = o.track1.slice();
         this.track2 = o.track2.slice();
         this.roll = o.roll.slice();
