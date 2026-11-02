@@ -1,0 +1,20 @@
+{
+    'pig-mcts1000-mcts1000-wins': 'MCTS1000',
+    'pig-mcts1000tps10-mcts1000-wins': 'MCTS1000tps10',
+    'pig-mcts1000tps100-mcts1000-wins': 'MCTS1000tps100',
+    
+    'pig-mcts10000-mcts10000-wins': 'MCTS10000',
+    'pig-mcts10000tps10-mcts10000-wins': 'MCTS10000tps10',
+    'pig-mcts10000tps100-mcts10000-wins': 'MCTS10000tps100',
+    'pig-mcts10000tps1000-mcts10000-wins': 'MCTS10000tps1000',
+    
+    'pig-mcts100000-mcts100000-wins': 'MCTS100000',
+    'pig-mcts100000tps10-mcts100000-wins': 'MCTS100000tps10',
+    'pig-mcts100000tps100-mcts100000-wins': 'MCTS100000tps100',
+    'pig-mcts100000tps1000-mcts100000-wins': 'MCTS100000tps1000',
+
+    'pig-mcts1000000-mcts1000000-wins': 'MCTS1000000',
+    'pig-mcts1000000tps10-mcts1000000-wins': 'MCTS1000000tps10',
+    'pig-mcts1000000tps100-mcts1000000-wins': 'MCTS1000000tps100',
+    'pig-mcts1000000tps1000-mcts1000000-wins': 'MCTS1000000tps1000',
+}

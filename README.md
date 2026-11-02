@@ -4,7 +4,10 @@ JSMCTS is a javascript implementation of <a href="https://en.wikipedia.org/wiki/
 
 ![checkers](./images/checkers.png)
 
-Simulations can also be run on the command line using <a href="https://nodejs.org">Node.js</a>, pitting two MCTS players against each other, or a MCTS player against a random player or heuristic player.
+Simulations can also be run on the command line using <a href="https://nodejs.org">Node.js</a>, pitting two MCTS players against each other or a MCTS player against a heuristic player.
+
+The performance of JSMCTS on several games for which optimal/perfect playing strategies are known is analyzed in the
+[benchmark](benchmark) directory.
 
 ## Monte Carlo Tree Search
 
@@ -15,14 +18,18 @@ MCTS evaluates moves through random game play, over many trials, building a sear
 The best move is then selected to play.
 The more <a href="https://en.wikipedia.org/wiki/Game_complexity">complex</a> a game is, the more time MCTS will need to explore the game tree in order to select a good move.
 
-This survey paper is a great resource for learning more about MCTS:
+These survey papers are a great resource for learning more about MCTS:
 
 C. B. Browne et al., "A Survey of Monte Carlo Tree Search Methods,"
 in IEEE Transactions on Computational Intelligence and AI in Games, vol. 4, no. 1, pp. 1-43, March 2012,
 https://doi.org/10.1109/TCIAIG.2012.2186810
 
-JSMCTS uses Upper Confidence Bounds for Trees (UCT) to guide exploration of the game tree and random playout to evaluate moves.
-Determinization is implemented for nondeterministic games using a seedable psuedo random number generator (xorshift128+).
+Świechowski, M., et al., "Monte Carlo Tree Search: a review of recent modifications and applications,"
+in Artificial Intelligence Review, vol. 56, pp. 2497–2562, July 2022,
+https://doi.org/10.1007/s10462-022-10228-y
+
+JSMCTS uses Upper Confidence Bounds for Trees (UCT) to guide exploration of the game tree and random playout with optional Early Playout Termination (EPT) to evaluate moves.
+Nondeterministic games are supported with Ensemble UCT and optional Determinization using a seedable psuedo random number generator (xorshift128+).
 
 ## Examples
 
@@ -160,6 +167,46 @@ exports.Game = function(o, rng) {
         }
     }
 };
+```
+
+### MCTS Players
+
+The provided MCTSPlayer can play any Game implementation and takes the following configuration parameters:
+* nTrials -- The number of search trials to run. Required.
+* nTrialsPerSeed -- For nondeterministic games, the number of trials to run with each PRNG seed, allowing exploration of a determinized game tree. A value between 0 and 1 is interpreted as a fraction of nTrials. Optional (default is to initialize PRNG with a new random seed for each trial).
+* evaluationFunc -- Overrides default rewardsFunc to evaluate the game state and assign player advatages. May be called mid-game if early playout termination is enabled (see maxPlayoutDepth). Should return an array of values, one for each player, that sum to 1.0
+Used by early playout termination. Optional.
+* maxPlayoutDepth -- The maximum number of random playout steps to run, at which point playout is terminated (early) and an evaluation function is used to score the game state if there is not yet a winner (requires evaluationFunc). Optional.
+
+Additional optional parameters that override internal defaults:
+* c -- The UCT exploration constant (default is sqrt(2))
+* cMult -- A multiplier for the UCT exploration constant (default is 1)
+* cRootMult -- A multiplier for the UCT exploration constant that only applies to root (default is 1)
+* rewardsFunc -- Used to calculate player rewards at the end of each game. Overridden by evaluationFunc if provided. Should return an array of values, one for each player, that sum to 1.0. (default assigns 1.0 to winner, if there is one, and 0.5 to all players on tie)
+* ensembleKeyFunc -- For nondeterministic games, generates a key value for the current game state. Used to map the different game states that result from executing nondeterministic actions to separate game subtrees which are then averaged together (default ensures one game subtree per currentPlayer+actionList, the minimum to ensure consistency)
+
+Base example:
+
+[See simtictactoe.js for more details]
+
+```
+new mcts.MCTSPlayer({ nTrials: 100000 })
+```
+
+Determinization example:
+
+[See simbackgammon.js for more details]
+
+```
+new mcts.MCTSPlayer({ nTrials: 100000, nTrialsPerSeed: 100 })
+```
+
+Early playout termination example:
+
+[See simbackgammon.js for more details]
+
+```
+new mcts.MCTSPlayer({ nTrials: 100000, nTrialsPerSeed: 100, maxPlayoutDepth: 5, evaluationFunc: game.simpleEvaluationFunc })
 ```
 
 ### Heuristic Players

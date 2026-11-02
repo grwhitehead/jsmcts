@@ -1,0 +1,30 @@
+{
+    'connectfour-random-perfect-wins': 'Random',
+    'connectfour-perfect-perfect-wins': 'Perfect',
+    'connectfour-mcts1000-perfect-wins': 'MCTS1000',
+    'connectfour-mcts10000-perfect-wins': 'MCTS10000',
+    'connectfour-mcts100000-perfect-wins': 'MCTS100000',
+    'connectfour-mcts1000000-perfect-wins': 'MCTS1000000',
+    
+    'connectfour-perfect-random-movecount': 'Random',
+    'connectfour-perfect-perfect-movecount': 'Perfect',
+    'connectfour-perfect-mcts1000-movecount': 'MCTS1000',
+    'connectfour-perfect-mcts10000-movecount': 'MCTS10000',
+    'connectfour-perfect-mcts100000-movecount': 'MCTS100000',
+    'connectfour-perfect-mcts1000000-movecount': 'MCTS1000000',
+    
+    'connectfour-perfect-perfect-optact': 'Perfect',
+    'connectfour-mcts1000-perfect-optact': 'MCTS1000',
+    'connectfour-mcts10000-perfect-optact': 'MCTS10000',
+    'connectfour-mcts100000-perfect-optact': 'MCTS100000',
+    'connectfour-mcts1000000-perfect-optact': 'MCTS1000000',
+
+    'connectfour-mcts1000000ev-perfect-wins': 'MCTS1000000ev',
+    'connectfour-perfect-mcts1000000ev-movecount': 'MCTS1000000ev',
+    'connectfour-mcts1000000ev-perfect-optact': 'MCTS1000000ev',
+    
+    'connectfour-mcts1000000-perfect-optact-1': 'MCTS1000000',
+    'connectfour-mcts1000000-perfect-optact-2': 'MCTS1000000',
+    'connectfour-mcts1000000ev-perfect-optact-1': 'MCTS1000000ev',
+    'connectfour-mcts1000000ev-perfect-optact-2': 'MCTS1000000ev',
+}

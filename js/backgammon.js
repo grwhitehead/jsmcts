@@ -78,8 +78,8 @@ exports.Game = function(o, rng) {
 
 exports.Game.prototype = Object.create(mcts.Game.prototype);
 
-exports.Game.prototype.copyGame = function() {
-    return new exports.Game(this);
+exports.Game.prototype.copyGame = function(rng) {
+    return new exports.Game(this, rng);
 };
 
 exports.Game.prototype.toString = function() {
@@ -206,7 +206,7 @@ exports.Game.prototype.allActions = function() {
 exports.Game.prototype.doAction = function(a) {
     mcts.Game.prototype.doAction.call(this, a);
     if (a.movei > 0) {
-        var done = true;
+        var done = false;
         if (this.currentPlayer == 1) {
             this.track1[a.from] -= 1;
             if (a.pos > 0) {
@@ -214,15 +214,10 @@ exports.Game.prototype.doAction = function(a) {
                     this.track2[25-a.pos] -= 1;
                     this.track2[25] += 1;
                 }
-                this.track1[a.pos] += 1;
             }
+            this.track1[a.pos] += 1;
             this.moves.splice(a.movei-1, 1);
-            for (var i = 1; i < 25; i++) {
-                if (this.track1[25] > 0 || this.track1[i] > 0) {
-                    done = false;
-                    break;
-                }
-            }
+            if (this.track1[0] == 15) done = true;
         } else {
             this.track2[a.from] -= 1;
             if (a.pos > 0) {
@@ -230,15 +225,10 @@ exports.Game.prototype.doAction = function(a) {
                     this.track1[25-a.pos] -= 1;
                     this.track1[25] += 1;
                 }
-                this.track2[a.pos] += 1;
             }
+            this.track2[a.pos] += 1;
             this.moves.splice(a.movei-1, 1);
-            for (var i = 1; i < 25; i++) {
-                if (this.track2[25] > 0 || this.track2[i] > 0) {
-                    done = false;
-                    break;
-                }
-            }
+            if (this.track2[0] == 15) done = true;
         }
         if (done) {
             this.winner = this.currentPlayer;
@@ -258,6 +248,23 @@ exports.Game.prototype.doAction = function(a) {
         this.moves.push(this.roll[0]);
         this.moves.push(this.roll[0]);
     }
+};
+
+
+/*
+ * Simple evaluationFunc for use with MCTS maxPlayoutDepth (aka Early Playout Termination)
+ *
+ * Weights each player's piece by how close it is to bearing off
+ */
+exports.simpleEvaluationFunc = function(g) {
+    // tip the scales towards the player closest to winning
+    var v = [0,0];
+    for (var i = 0; i < 25; i++) {
+        v[0] += (25-i)*g.track1[i];
+        v[1] += (25-i)*g.track2[i];
+    }
+    var t = v[0]+v[1];
+    return [v[0]/t, v[1]/t];
 };
 
 

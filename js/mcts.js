@@ -119,6 +119,29 @@ exports.PRNG.prototype.random = function() {
 
 
 /*
+ * Utility function to randomly shuffle an array, rng param is optional
+ */
+exports.shuffleArray = function(array, rng) {
+    var currentIndex = array.length, temporaryValue, randomIndex;
+
+    // While there remain elements to shuffle...
+    while (0 !== currentIndex) {
+
+        // Pick a remaining element...
+        randomIndex = Math.floor(((rng == undefined)?Math.random():rng.random()) * currentIndex);
+        currentIndex -= 1;
+
+        // And swap it with the current element.
+        temporaryValue = array[currentIndex];
+        array[currentIndex] = array[randomIndex];
+        array[randomIndex] = temporaryValue;
+    }
+
+    return array;
+}
+
+
+/*
  * base classes for MCTS games (see example code)
  */
 
@@ -226,19 +249,32 @@ exports.MCTSNode.prototype.toString = function() {
 /*
  * Select child for exploration using UCT Algorithm
  *
- * c = 2*Cp/sqrt(2), where Cp is the exploration constant
- *
- * For rewards in range [0,1] Cp = 1/sqrt(2) and c = 1.0
- *
+ * c is the exploration constant, pass zero for final selection
  */
 exports.MCTSNode.prototype.selectChild = function(c) {
+    // currently selected child and value
     var sa = null;
     var sv;
-    for (var i = 0; i < this.children.length; i++) {
-        var a = this.children[i];
-        var v = (1.0*a.values[a.player-1])/(1+a.count)
-            + c*Math.sqrt(Math.log(1+this.count)/(1+a.count))
-            + Math.random()*1e-6;
+    // break ties by visiting children in randomly shuffled order
+    var cidx = new Array(this.children.length);
+    for (var i = 0; i < cidx.length; i++) cidx[i] = i;
+    exports.shuffleArray(cidx);
+    for (var i = 0; i < cidx.length; i++) {
+        var a = this.children[cidx[i]];
+        var v = 0;
+        if (a.count == 0) {
+            if (c > 0) {
+                // make sure all nodes are explored at least once (v infinity)
+                return a;
+            } else {
+                // assign unvisited nodes zero in the final selection process
+            }
+        } else {
+            // calculate value for visited nodes
+            v = (1.0*a.values[a.player-1])/a.count
+                + c*Math.sqrt(Math.log(this.count)/a.count);
+        }
+        // update selection if we find a higher value
         if (sa == null || v > sv) {
             sa = a;
             sv = v;
@@ -254,36 +290,86 @@ exports.MCTSNode.prototype.updateValues = function(rewards) {
     }
 };
 
-
 exports.MCTSPlayer = function(config) {
     exports.Player.call(this);
-    this.nTrials = config.nTrials;
-    
-    // determinization for nondeterministic games (use same PRNG seed for nTrialsPerSeed before switching)
-    this.nTrialsPerSeed = config.nTrialsPerSeed;
 
-    // exploration constant, see MCTSNode selectChild
+    // number of trials to run, required parameter
+    if (config.nTrials == undefined) {
+        throw "nTrials required";
+    }
+    this.nTrials = config.nTrials;
+
+    // exploration constant, see MCTSNode selectChild (defaults to sqrt(2) for rewards [0,1])
     if (config.c == undefined) {
-        this.c = 1.0;
+        this.c = Math.sqrt(2);
     } else {
         this.c = config.c;
     }
+    if (config.cMult != undefined) {
+        this.c *= config.cMult;
+    }
+    if (config.cRootMult != undefined) {
+        this.cRootMult = config.cRootMult;
+    } else {
+        this.cRootMult = 1;
+    }
 
-    // calculate rewards
-    if (config.rewardsFunc == undefined) {
+    // ensemble uct is used for nondeterministic games to avoid inconsistent game trees
+    // ensembleKeyFunc generates a key for the current game state that is used to map the different game states that result
+    // from executing nondeterministic actions to separate game subtrees which are then averaged together
+    if (config.ensembleKeyFunc) {
+        this.ensembleKeyFunc = config.ensembleKeyFunc;
+    } else {
+        // default ensembleKeyFunc ensures one game subtree per currentPlayer+actionList, the minimum to ensure consistency
+        this.ensembleKeyFunc = function(g) { return ""+g.currentPlayer+":"+g.allActions() };
+    }
+    
+    // determinization is used for nondeterministic games if nTrialsPerSeed is provided
+    // nTrialsPerSeed trials are run with the same PRNG seed on a game subtree, with separate subtrees for each seed that
+    // are then averaged together
+    if (config.nTrialsPerSeed != undefined) {
+        if (config.nTrialsPerSeed < 1) {
+            this.nTrialsPerSeed = Math.ceil(this.nTrials * config.nTrialsPerSeed);
+        } else {
+            this.nTrialsPerSeed = config.nTrialsPerSeed;
+        }
+    }
+
+    // evaluationFunc is optional and uses game-specific knowledge to rate player advantage mid-game or at game end (should return an array of values, one for each player, that sum to 1.0)
+    if (config.evaluationFunc != undefined) {
+        this.evaluationFunc = config.evaluationFunc;
+    }
+
+    // early playout termination (default is to run random playout to end of game)
+    this.maxPlayoutDepth = config.maxPlayoutDepth;
+    if (this.maxPlayoutDepth) {
+        // requires evaluationFunc
+        if (this.evaluationFunc == undefined) {
+            throw "evaluationFunc required with maxPlayoutDepth";
+        }
+    }
+
+    // rewardsFunc is called at game end to calculate player rewards (should return an array of values, one for each player, that sum to 1.0)
+    // overridden by evaluationFunc if provided
+    if (config.evaluationFunc != undefined) {
+        this.rewardsFunc = this.evaluationFunc;
+    } else if (config.rewardsFunc != undefined) {
+        this.rewardsFunc = config.rewardsFunc;
+    } else {
+        // default rewardsFunc
         this.rewardsFunc = function(g) {
             if (g.winner > 0) {
+                // we had a winner
                 var rewards = new Array(g.nPlayers).fill(0.0);
                 if (g.winner <= g.nPlayers) {
                     rewards[g.winner-1] = 1.0;
                 }
                 return rewards;
             } else {
+                // we had a draw
                 return new Array(g.nPlayers).fill(0.5);
             }
         };
-    } else {
-        this.rewardsFunc = config.rewardsFunc;
     }
 };
 
@@ -314,13 +400,8 @@ exports.MCTSPlayer.prototype.startThinking = function(g) {
     var root = state.root;
     root.cumSearchDepth = 0;
     root.cumGameDepth = 0;
-    root.parentNodeCount = 0;
-    root.totalNodeCount = 1;
-    if (!root.children) {
-        root.children = g.allActions().map(function (a) { return new exports.MCTSNode(g, a) });
-        root.parentNodeCount += 1;
-        root.totalNodeCount += root.children.length;
-    }
+    root.cumBranchingFactor = 0;
+    root.children = g.allActions().map(function (a) { return new exports.MCTSNode(g, a) });
     if (this.searchCallback) {
         this.searchCallback(state);
     }
@@ -328,6 +409,8 @@ exports.MCTSPlayer.prototype.startThinking = function(g) {
 }
 exports.MCTSPlayer.prototype.continueThinking = function(state, nt) {
     var g = state.game;
+    // use ensemble uct or determinization to avoid inconsistent game trees
+    var nondeterministicEnsemble = g.nondeterministic && this.nTrialsPerSeed == undefined;
     var root = state.root;
     if (root.children.length <= 1 || root.count >= this.nTrials) {
         return false;
@@ -337,16 +420,16 @@ exports.MCTSPlayer.prototype.continueThinking = function(state, nt) {
     var time0 = Date.now();
     for (var t = t0; t < t1; t++) {
         var tg; // copy current game state for new trial
-        if (g.nondeterministic && this.nTrialsPerSeed) {
-            // use determinization, running nTrialsPerSeed with the same PRNG seed
-            if (root.count % this.nTrialsPerSeed == 0) {
-                state.seed = new exports.PRNGSeed();
-                if (root.children) {
-                    // subtree node states potentially change with each seed, so we
-                    // clear the children of the top-level actions on seed change
-                    // (top-level values will be an average over all trials)
-                    for (var i = 0; i < root.children.length; i++) {
-                        root.children[i].children = null;
+        if (g.nondeterministic) {
+            if (this.nTrialsPerSeed != undefined) {
+                // use determinization, running nTrialsPerSeed with the same PRNG seed
+                if (root.count % this.nTrialsPerSeed == 0) {
+                    state.seed = new exports.PRNGSeed();
+                    if (root.children) {
+                        // clear children on seed change
+                        for (var i = 0; i < root.children.length; i++) {
+                            root.children[i].children = null;
+                        }
                     }
                 }
             }
@@ -355,34 +438,72 @@ exports.MCTSPlayer.prototype.continueThinking = function(state, nt) {
             tg = g.copyGame();
         }
         var vns = [root]; // track visited nodes
+        var branches = root.children.length;
         // select next child to explore
-        var n = root.selectChild(this.c);
+        var n = root.selectChild(this.c*this.cRootMult);
         vns.push(n);
         tg.doAction(n.action);
+        if (nondeterministicEnsemble) {
+            // use ensemble uct with separate subtrees per ensembleKey
+            if (n.children == null) {
+                n.children = {};
+            }
+            // ensembleKeyFunc maps game states to ensemble tree nodes
+            var ek = this.ensembleKeyFunc(tg);
+            if (n.children[ek] == undefined) {
+                // duplicate this node for the new game state
+                n.children[ek] = new exports.MCTSNode(tg, n.action);
+            }
+            // switch to the version of this node matching the current game state
+            n = n.children[ek];
+            vns.push(n);
+        }
         var depth = 1;
         // repeat to frontier of explored game tree
         while (!tg.isGameOver() && n.children) {
+            branches += n.children.length;
             n = n.selectChild(this.c);
             vns.push(n);
             tg.doAction(n.action);
+            if (nondeterministicEnsemble) {
+                if (n.children == null) {
+                    n.children = {};
+                }
+                var ek = this.ensembleKeyFunc(tg);
+                if (n.children[ek] == undefined) {
+                    n.children[ek] = new exports.MCTSNode(tg, n.action);
+                }
+                n = n.children[ek];
+                vns.push(n);
+            }
             depth += 1;
         }
         // if game isn't over, expand frontier node and select a child to explore
         if (!tg.isGameOver()) {
             n.children = tg.allActions().map(function (a) { return new exports.MCTSNode(tg, a) });
-            root.parentNodeCount += 1;
-            root.totalNodeCount += n.children.length;
+            branches += n.children.length;
             n = n.selectChild(this.c);
             vns.push(n);
             tg.doAction(n.action);
+            if (nondeterministicEnsemble) {
+                if (n.children == null) {
+                    n.children = {};
+                }
+                var ek = this.ensembleKeyFunc(tg);
+                if (n.children[ek] == undefined) {
+                    n.children[ek] = new exports.MCTSNode(tg, n.action);
+                }
+                n = n.children[ek];
+                vns.push(n);
+            }
             depth += 1;
         }
         var searchDepth = depth;
         // random playout to end of game
         while (!tg.isGameOver()) {
+            if (this.maxPlayoutDepth && depth-searchDepth >= this.maxPlayoutDepth) break;
             var rp_as = tg.allActions();
-            root.parentNodeCount += 1;
-            root.totalNodeCount += rp_as.length;
+            branches += rp_as.length;
             var rp_a = rp_as[Math.floor(Math.random()*rp_as.length)];
             tg.doAction(rp_a);
             depth += 1;
@@ -395,12 +516,13 @@ exports.MCTSPlayer.prototype.continueThinking = function(state, nt) {
         }
         root.cumSearchDepth += searchDepth;
         root.cumGameDepth += gameDepth;
+        root.cumBranchingFactor += (1.0*branches/gameDepth);
     }
     state.time += Date.now()-time0;
     if (root.count > 0) {
         state.avgSearchDepth = (1.0*root.cumSearchDepth/root.count);
         state.avgGameDepth = (1.0*root.cumGameDepth/root.count);
-        state.avgBranchingFactor = 1.0*(root.totalNodeCount-1)/root.parentNodeCount;
+        state.avgBranchingFactor = (1.0*root.cumBranchingFactor/root.count);
     }
     if (this.searchCallback) {
         this.searchCallback(state);
@@ -411,7 +533,7 @@ exports.MCTSPlayer.prototype.stopThinking = function(state) {
     var g = state.game;
     var root = state.root;
     if (root.children.length > 0) {
-        state.best = root.selectChild(0);
+        state.best = root.selectChild("", 0);
     }
     if (this.searchCallback) {
         this.searchCallback(state);

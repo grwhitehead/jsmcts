@@ -25,18 +25,20 @@
 (function(exports, require){
 
 const mcts = require('mcts');
+const data = require('connectfourdata');
+const exec = require('child_process');
 
 
-exports.Action = function(p) {
+exports.Action = function(c) {
     mcts.Action.call(this);
 
-    this.pos = p;
+    this.col = c;
 };
 
 exports.Action.prototype = Object.create(mcts.Action.prototype);
 
 exports.Action.prototype.toString = function() {
-    return ""+this.pos;
+    return ""+this.col;
 };
 
 
@@ -45,6 +47,7 @@ exports.Game = function(o) {
         // copy game
         mcts.Game.call(this, o);
         this.board = o.board.slice();
+        this.moves = o.moves.slice();
     } else {
         // initialize new game
         mcts.Game.call(this, { nPlayers: 2 });
@@ -54,6 +57,7 @@ exports.Game = function(o) {
                       0, 0, 0, 0, 0, 0, 0,
                       0, 0, 0, 0, 0, 0, 0,
                       0, 0, 0, 0, 0, 0, 0];
+        this.moves = [];
     }
 };
 
@@ -112,11 +116,8 @@ var lines = [
 exports.Game.prototype.allActions = function() {
     var as = [];
     for (var i = 0; i < 7; i++) {
-        for (var j = 5; j >= 0; j--) {
-            if (this.board[i+j*7] == 0) {
-                as.push(new exports.Action(1+i+j*7));
-                break;
-            }
+        if (this.board[i] == 0) {
+            as.push(new exports.Action(1+i));
         }
     }
     return as;
@@ -124,7 +125,13 @@ exports.Game.prototype.allActions = function() {
 
 exports.Game.prototype.doAction = function(a) {
     mcts.Game.prototype.doAction.call(this, a);
-    this.board[a.pos-1] = this.currentPlayer;
+    for (var i = 5; i >= 0; i--) {
+        if (this.board[a.col-1+i*7] == 0) {
+            this.board[a.col-1+i*7] = this.currentPlayer;
+            break;
+        }
+    }
+    this.moves.push(a.col);
     var e = false;
     for (var i = 0; i < lines.length; i++) {
         var line = lines[i];
@@ -159,6 +166,94 @@ exports.Game.prototype.doAction = function(a) {
             this.currentPlayer = (this.currentPlayer%2)+1
         }
     }
+};
+
+
+/*
+ * Simple evaluationFunc for use with MCTS maxPlayoutDepth (aka Early Playout Termination)
+ *
+ * Weights each player's available 'lines' according to how close they are to being completed
+ */
+exports.simpleEvaluationFunc = function(g) {
+    var v = [0,0];
+    for (var i = 0; i < lines.length; i++) {
+        var line = lines[i];
+        var n1 = 0;
+        var n2 = 0;
+        for (var j = 0; j < line.length; j++) {
+            switch (g.board[line[j]]) {
+            case 1:
+                n1++;
+                break;
+            case 2:
+                n2++;
+                break;
+            case 0:
+            }
+        }
+        if (n1 > 0 && n2 == 0) {
+            v[0] += Math.pow(10,n1);
+        } else if (n2 > 0 && n1 == 0) {
+            v[1] += Math.pow(10, n2);
+        }
+    }
+    t = v[0]+v[1];
+    if (t == 0) return [0.5,0.5];
+    return [v[0]/t,v[1]/t];
+};
+
+
+/*
+ * PerfectPlayer
+ *
+ * Perfect player based on Chris Steininger's solver
+ *
+ * See https://github.com/ChristopheSteininger/c4
+ *
+ * Requires bestmove added in fork https://github.com/grwhitehead/c4
+ *
+ * NOTE: only works on commmand line with ./run.sh simconnectfour.js, set environment
+ * variable CONNECTFOUR_SOLVER_DIR to path to directory containing bestmove binary
+ *
+ */
+exports.PerfectPlayer = function(config) {
+    mcts.Player.call(this);
+    
+    this.dir = process.env.CONNECTFOUR_SOLVER_DIR;
+};
+
+exports.PerfectPlayer.prototype = Object.create(mcts.Player.prototype);
+    
+exports.PerfectPlayer.prototype.getAction = function(g) {
+
+    var movesStr = g.moves.join("");
+    console.log("moves: ",movesStr);
+    var res = data.bestmoveCache[movesStr];
+    if (!res) {
+        res = exec.execFileSync(this.dir+'/bestmove', [g.moves.map(function(m) { return m-1 }).join("")], {
+            stdio: 'pipe',
+            encoding: 'utf8',
+        });
+    }
+    console.log(res);
+    
+    var resLines = res.split("\n");
+    var resMoves = [];
+    var i = 10;
+    while (resLines[i].length > 0) {
+        var l = resLines[i].split(" ");
+        var move = parseInt(l[0]);
+        var score = parseInt(l[1]); // -N loss / 0 tie / +N win
+        var movesleft = parseInt(l[2]);
+        resMoves.push([move, score, movesleft]);
+        i += 1;
+    }
+    resMoves.sort(function(a, b) { return a[1]>b[1]?-1:1; });
+    console.log(resMoves);
+    
+    var nbest = 1;
+    while (nbest < resMoves.length && resMoves[nbest][1] == resMoves[nbest-1][1]) nbest += 1;
+    return new exports.Action(resMoves[Math.floor(Math.random()*nbest)][0]+1);
 };
 
 

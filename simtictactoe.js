@@ -33,12 +33,13 @@ var switches = [
 
 var availablePlayers = {
     "random": function() { return new mcts.RandomPlayer(); },
+    "perfect": function() { return new game.PerfectPlayer(); },
+    
     "mcts10": function() { return new mcts.MCTSPlayer({ nTrials: 10 }); },
     "mcts100": function() { return new mcts.MCTSPlayer({ nTrials: 100 }); },
     "mcts1000": function() { return new mcts.MCTSPlayer({ nTrials: 1000 }); },
     "mcts10000": function() { return new mcts.MCTSPlayer({ nTrials: 10000 }); },
     "mcts100000": function() { return new mcts.MCTSPlayer({ nTrials: 100000 }); },
-    "perfect": function() { return new game.PerfectPlayer(); }
 };
 
 var parser = new optparse.OptionParser(switches);
@@ -78,6 +79,13 @@ for (var n = 1; n <= nruns; n++) {
     var ps = players.map(function(name) {
         if (availablePlayers.hasOwnProperty(name))
             return availablePlayers[name]();
+        if (name.startsWith("mcts{")) {
+            // parse mcts player parameters encoded in player name
+            // mcts{"nTrials":1000000,"nTrialsPerSeed":100,"c":14,"maxPlayoutDepth":5,"evaluationFunc":"*game.simpleEvaluationFunc"}
+            return new mcts.MCTSPlayer(
+                JSON.parse(name.substr(4), (k,v) => (typeof v == 'string' && v.startsWith('*'))?eval(v.substr(1)):v )
+            );
+        }
         console.log("ERROR: unknown player: "+name);
         return null;
     });

@@ -1,0 +1,7 @@
+{
+    'tictactoe-random-perfect-draws': 'Random',
+    'tictactoe-perfect-perfect-draws': 'Perfect',
+    'tictactoe-mcts10-perfect-draws': 'MCTS10',
+    'tictactoe-mcts100-perfect-draws': 'MCTS100',
+    'tictactoe-mcts1000-perfect-draws': 'MCTS1000',
+}

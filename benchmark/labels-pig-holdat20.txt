@@ -1,0 +1,7 @@
+{
+    'pig-holdat20-holdat20-wins': 'HoldAt20',
+    'pig-mcts1000-holdat20-wins': 'MCTS1000',
+    'pig-mcts10000-holdat20-wins': 'MCTS10000',
+    'pig-mcts100000-holdat20-wins': 'MCTS100000',
+    'pig-mcts1000000-holdat20-wins': 'MCTS1000000',
+}

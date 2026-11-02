@@ -70,7 +70,7 @@
           <h3 id="howtoplay">HOW TO PLAY</h3>
           <p>Play <a target="_new" href="https://en.wikipedia.org/wiki/Connect_Four">Connect Four</a> against the computer.</p>
           <p>Player one is GREEN and player two is BLUE. By default you are player one and the computer is player two, but that can be swapped when starting a new game.</p>
-          <p>When you hover over a cell that can be marked it is highlighted in YELLOW. Click on a highlighted cell to make your mark. Try to get four adjacent marks in a row, column, or along a diagonal. Cells must be filled from the bottom up in each column.</p>
+          <p>When you hover over a cell in a column where piece can be placed it is highlighted in YELLOW. Click on a highlighted cell to place your piece. Cells are filled from the bottom up in each column. Try to get four adjacent marks in a row, column, or along a diagonal.</p>
           <p>After you move, the computer will "think" and then make its move. The computer's move will be highligted with a dashed BLACK outline.</p>
           <p>The computer uses <a target="_new" href="https://github.com/grwhitehead/jsmcts">JSMCTS</a>, a javascript implementation of Monte Carlo Tree Search (MCTS) that runs in the browser, to select a move. It displays the moves it is evaluating and what percentage of the time those moves lead to a win. The number of trials it runs and the amount of time it has to run them can be controlled.</p>
           <p>Repository: <a href="https://github.com/grwhitehead/jsmcts">https://github.com/grwhitehead/jsmcts</a></p>
@@ -127,7 +127,7 @@
         for (var i = 0; i < 6; i++) {
           board += "<tr>";
           for (var j = 0; j < 7; j++) {
-            board += "<td><div class='cell'>"+(1+i*7+j)+"</div></td>";
+            board += "<td><div class='cell'>"+(i==0?1+j:"")+"</div></td>";
           }
           board += "</tr>";
         }
@@ -139,7 +139,7 @@
         });
         cells = $(document).find(".cell");
         for (var i = 0; i < cells.length; i++) {
-          $(cells[i]).data("pos", 1+i);
+          $(cells[i]).data("col", 1+(i%7));                                    
           if (g.board[i] == 1) $(cells[i]).addClass("marked1");
           if (g.board[i] == 2) $(cells[i]).addClass("marked2");
         }
@@ -147,7 +147,7 @@
           if (g.currentPlayer == humanPlayer) {
             for (var i = 0; i < g.currentActions.length; i++) {
               var a = g.currentActions[i];
-              if ($(this).data("pos") == a.pos) {
+              if ($(this).data("col") == a.col) {
                 $(this).addClass("hilite");
                 break;
               }
@@ -160,9 +160,14 @@
           if (g.currentPlayer == humanPlayer) {
             for (var i = 0; i < g.currentActions.length; i++) {
               var a = g.currentActions[i];
-              if ($(this).data("pos") == a.pos) {
+              if ($(this).data("col") == a.col) {
                 $(document).find(".cell").removeClass("hilite movehilite");
-                $(this).addClass("marked"+humanPlayer);
+                for (j = 5; j >= 0; j--) {
+                  if (g.board[a.col-1+j*7] == 0) {
+                    $(cells[a.col-1+j*7]).addClass("marked"+humanPlayer);
+                    break;
+                  }
+                }
                 g.doAction(a);
                 play_continue();
                 return;
@@ -210,8 +215,13 @@
           return;
         }
         var a = p.stopThinking(state);
-        $(cells[a.pos-1]).addClass("marked"+computerPlayer);
-        $(cells[a.pos-1]).addClass("movehilite");
+        for (j = 5; j >= 0; j--) {
+          if (g.board[a.col-1+j*7] == 0) {
+            $(cells[a.col-1+j*7]).addClass("marked"+computerPlayer);
+            $(cells[a.col-1+j*7]).addClass("movehilite");
+            break;
+          }
+        }
         g.doAction(a);
         play_continue();
       }

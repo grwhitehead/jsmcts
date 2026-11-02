@@ -1,0 +1,20 @@
+{
+    'blackjack-random-winnings': 'Random',
+    'blackjack-nobust-winnings': 'NoBust',
+    'blackjack-mimicdealer-winnings': 'MimicDealer',
+    'blackjack-optimum-winnings': 'BaldwinOptimum',
+    'blackjack-mcts1000tps10-winnings': 'MCTS1000tps10',
+    'blackjack-mcts10000tps100-winnings': 'MCTS10000tps100',
+    'blackjack-mcts100000tps100-winnings': 'MCTS100000tps100',
+    'blackjack-mcts1000000tps250-winnings': 'MCTS1000000tps250',
+    'blackjack-mcts10000000tps250-winnings': 'MCTS10000000tps250',
+
+    'blackjack-nobust-optact': 'NoBust',
+    'blackjack-mimicdealer-optact': 'MimicDealer',
+    'blackjack-optimum-optact': 'BaldwinOptimum',
+    'blackjack-mcts1000tps10-optact': 'MCTS1000tps10',
+    'blackjack-mcts10000tps100-optact': 'MCTS10000tps100',
+    'blackjack-mcts100000tps100-optact': 'MCTS100000tps100',
+    'blackjack-mcts1000000tps250-optact': 'MCTS1000000tps250',
+    'blackjack-mcts10000000tps250-optact': 'MCTS10000000tps250',
+}

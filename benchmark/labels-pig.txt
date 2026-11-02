@@ -1,0 +1,18 @@
+{
+    'pig-random-optimal-wins': 'Random',
+    'pig-holdat20-optimal-wins': 'HoldAt20',
+    'pig-keeppaceendrace-optimal-wins': 'KeepPaceEndRace',
+    'pig-optimal-optimal-wins': 'Optimal',
+    'pig-mcts1000-optimal-wins': 'MCTS1000',
+    'pig-mcts10000-optimal-wins': 'MCTS10000',
+    'pig-mcts100000-optimal-wins': 'MCTS100000',
+    'pig-mcts1000000-optimal-wins': 'MCTS1000000',
+
+    'pig-holdat20-optimal-optact': 'HoldAt20',
+    'pig-keeppaceendrace-optimal-optact': 'KeepPaceEndRace',
+    'pig-optimal-optimal-optact': 'Optimal',
+    'pig-mcts1000-optimal-optact': 'MCTS1000',
+    'pig-mcts10000-optimal-optact': 'MCTS10000',
+    'pig-mcts100000-optimal-optact': 'MCTS100000',
+    'pig-mcts1000000-optimal-optact': 'MCTS1000000',
+}

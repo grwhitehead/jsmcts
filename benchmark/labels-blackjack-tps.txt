@@ -1,0 +1,33 @@
+{
+    'blackjack-mcts1000-winnings': 'MCTS1000',
+    'blackjack-mcts1000tps10-winnings': 'MCTS1000tps10',
+    'blackjack-mcts1000tps100-winnings': 'MCTS1000tps100',
+    
+    'blackjack-mcts10000-winnings': 'MCTS10000',
+    'blackjack-mcts10000tps10-winnings': 'MCTS10000tps10',
+    'blackjack-mcts10000tps100-winnings': 'MCTS10000tps100',
+    'blackjack-mcts10000tps250-winnings': 'MCTS10000tps250',
+    'blackjack-mcts10000tps500-winnings': 'MCTS10000tps500',
+    'blackjack-mcts10000tps1000-winnings': 'MCTS10000tps1000',
+    
+    'blackjack-mcts100000-winnings': 'MCTS100000',
+    'blackjack-mcts100000tps10-winnings': 'MCTS100000tps10',
+    'blackjack-mcts100000tps100-winnings': 'MCTS100000tps100',
+    'blackjack-mcts100000tps250-winnings': 'MCTS100000tps250',
+    'blackjack-mcts100000tps500-winnings': 'MCTS100000tps500',
+    'blackjack-mcts100000tps1000-winnings': 'MCTS100000tps1000',
+
+    'blackjack-mcts1000000-winnings': 'MCTS1000000',
+    'blackjack-mcts1000000tps10-winnings': 'MCTS1000000tps10',
+    'blackjack-mcts1000000tps100-winnings': 'MCTS1000000tps100',
+    'blackjack-mcts1000000tps250-winnings': 'MCTS1000000tps250',
+    'blackjack-mcts1000000tps500-winnings': 'MCTS1000000tps500',
+    'blackjack-mcts1000000tps1000-winnings': 'MCTS1000000tps1000',
+
+    'blackjack-mcts10000000-winnings': 'MCTS10000000',
+    'blackjack-mcts10000000tps10-winnings': 'MCTS10000000tps10',
+    'blackjack-mcts10000000tps100-winnings': 'MCTS10000000tps100',
+    'blackjack-mcts10000000tps250-winnings': 'MCTS10000000tps250',
+    'blackjack-mcts10000000tps500-winnings': 'MCTS10000000tps500',
+    'blackjack-mcts10000000tps1000-winnings': 'MCTS10000000tps1000',
+}
