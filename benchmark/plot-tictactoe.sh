@@ -1,5 +1,7 @@
 #!/bin/sh
 
+EXT=png
+
 mkdir -p plots
 
 PLAYERS="\
@@ -24,4 +26,4 @@ PLAYERS="\
            -p\
            -l labels-tictactoe.txt\
            -t "Mean Draw Pct vs Perfect Play"\
-           -c -s plots/tictactoe.pdf
+           -c -s plots/tictactoe.${EXT}

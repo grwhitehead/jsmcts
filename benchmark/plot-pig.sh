@@ -1,5 +1,7 @@
 #!/bin/sh
 
+EXT=png
+
 mkdir -p plots
 
 PLAYERS="\
@@ -31,4 +33,4 @@ PLAYERS="\
            -p -n 10000\
            -l labels-pig.txt\
            -t "Mean Win Pct vs Optimal Player"\
-           -c -s plots/pig.pdf
+           -c -s plots/pig.${EXT}

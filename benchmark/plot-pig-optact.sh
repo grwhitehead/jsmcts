@@ -1,5 +1,7 @@
 #!/bin/sh
 
+EXT=png
+
 mkdir -p plots
 
 PLAYERS="\
@@ -16,4 +18,4 @@ PLAYERS="\
            -p -n 400000\
            -l labels-pig.txt\
            -t "Player Optimal Action Pct"\
-           -c -s plots/pig-optact.pdf
+           -c -s plots/pig-optact.${EXT}

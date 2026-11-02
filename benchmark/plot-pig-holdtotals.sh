@@ -1,6 +1,6 @@
 #!/bin/sh
 
-EXT=pdf
+EXT=png
 
 ./scatter.py data/pig-holdat20-optimal-holdtotals\
              -n 100000\

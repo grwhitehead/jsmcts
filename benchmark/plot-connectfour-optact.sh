@@ -1,5 +1,7 @@
 #!/bin/sh
 
+EXT=png
+
 mkdir -p plots
 
 PLAYERS="\
@@ -14,4 +16,4 @@ PLAYERS="\
            -p -n 20000\
            -l labels-connectfour.txt\
            -t "Player Perfect Move Pct"\
-           -c -s plots/connectfour-optact.pdf
+           -c -s plots/connectfour-optact.${EXT}

@@ -1,5 +1,7 @@
 #!/bin/sh
 
+EXT=png
+
 mkdir -p plots
 
 PLAYERS="\
@@ -14,4 +16,4 @@ PLAYERS="\
            -u -p -n 10000\
            -l labels-pig-holdat20.txt\
            -t "Mean Win Pct vs HoldAt20 Player"\
-           -c -s plots/pig-holdat20.pdf 
+           -c -s plots/pig-holdat20.${EXT} 

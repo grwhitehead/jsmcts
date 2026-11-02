@@ -1,5 +1,7 @@
 #!/bin/sh
 
+EXT=png
+
 mkdir -p plots
 
 PLAYERS="\
@@ -40,4 +42,4 @@ PLAYERS="\
            -n 100000\
            -l labels-blackjack.txt\
            -t "Mean Winnings per Hand"\
-           -c -s plots/blackjack.pdf
+           -c -s plots/blackjack.${EXT}

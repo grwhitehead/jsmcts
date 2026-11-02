@@ -46,7 +46,7 @@ The MCTS player was then tested to see how it performed relative to the heuristi
 
 The MCTS player achieved perfect play at around 1000 trials (short of exhaustively searching the entire tree of roughly 8! = 40,000 games as second player):
 
-![Tic-Tac-Toe Mean Draw Pct vs Perfect Play](plots/tictactoe.pdf)
+![Tic-Tac-Toe Mean Draw Pct vs Perfect Play](plots/tictactoe.png)
 
 |Player|Games|Mean Draw Pct vs Perfect Play|Standard Error|
 |---|---|---|---|
@@ -92,7 +92,7 @@ Tests were run for trials in powers of 10 up to 1,000,000 (the largest value for
 
 At 1,000,000 trials the MCTS player is finally able to win against a perfect second player, but only around 3 percent of the time:
 
-![Mean Win Pct vs Perfect Second Player](plots/connectfour-other-v-perfect.pdf)
+![Mean Win Pct vs Perfect Second Player](plots/connectfour-other-v-perfect.png)
 
 |Player|Games|Mean Win Pct vs Perfect Second Player|Standard Error|
 |---|---|---|---|
@@ -105,7 +105,7 @@ At 1,000,000 trials the MCTS player is finally able to win against a perfect sec
 
 Against a perfect first player, which is always able to force a win in at most 41 moves, the MCTS was only able to last around 33 moves at 1,000,000 trials:
 
-![Mean Moves to Win vs Perfect First Player](plots/connectfour-perfect-v-other-movecount.pdf)
+![Mean Moves to Win vs Perfect First Player](plots/connectfour-perfect-v-other-movecount.png)
 
 |Player|Games|Mean Moves to Perfect First Player Win vs Player|Standard Error|
 |---|---|---|---|
@@ -118,7 +118,7 @@ Against a perfect first player, which is always able to force a win in at most 4
 
 Finally, the moves made by the MCTS players in these games can be compared to the moves that the heuristic perfect player would have made, giving a measure of how close they are to perfect play:
 
-![Player Perfect Move Pct](plots/connectfour-optact.pdf)
+![Player Perfect Move Pct](plots/connectfour-optact.png)
 
 |Player|Move|Mean Perfect Move Pct|Standard Error|
 |---|---|---|---|
@@ -136,7 +136,7 @@ Here we look at a very simple evalutation function that doesn't require much mor
 
 Even this simple evaluation funcion increased the win rate at 1,000,000 trials almost tenfold:
 
-![Mean Win Pct vs Perfect Second Player](plots/connectfour-mcts1000000ev-v-perfect.pdf)
+![Mean Win Pct vs Perfect Second Player](plots/connectfour-mcts1000000ev-v-perfect.png)
 
 |Player|Games|Mean Wins vs Perfect Second Player|Standard Error|
 |---|---|---|---|
@@ -260,7 +260,7 @@ Tests were then run for trials in powers of 10 up to 10,000,000 (the largest val
 
 The MCTS player outperformed the Mimic Dealer strategy starting at 100,000 trials:
 
-![Blackjack Player Expected Winnings](plots/blackjack.pdf)
+![Blackjack Player Expected Winnings](plots/blackjack.png)
 
 |Player|Hands|Mean Winnings per Hand|Standard Error|
 |---|---|---|---|
@@ -276,15 +276,15 @@ The MCTS player outperformed the Mimic Dealer strategy starting at 100,000 trial
 
 Plotting the distributions of winnings per hand for these games we can see how the MCTS player performance compares to the MimicDealer and BaldwinOptimum players:
 
-![MimicDealer Player Expected Winnings](plots/blackjack-mimicdealer-hist.pdf)
+![MimicDealer Player Expected Winnings](plots/blackjack-mimicdealer-hist.png)
 
-![MCTS10000000tps250 Player Expected Winnings](plots/blackjack-mcts10000000tps250-hist.pdf)
+![MCTS10000000tps250 Player Expected Winnings](plots/blackjack-mcts10000000tps250-hist.png)
 
-![Optimum Player Expected Winnings](plots/blackjack-optimum-hist.pdf)
+![Optimum Player Expected Winnings](plots/blackjack-optimum-hist.png)
 
 Finally, the actions taken by the players in these games can be compared to the actions that the optimum player would have made, giving a measure of how close they are to optimum play:
 
-![Player Optimum Action Pct](plots/blackjack-optact.pdf)
+![Player Optimum Action Pct](plots/blackjack-optact.png)
 
 |Player|Actions|Mean Optimum Action Pct|Standard Error|
 |---|---|---|---|
@@ -363,7 +363,7 @@ The best results were without determinization.
 
 Tests were then run for trials in powers of 10 up to 1,000,000 (the largest value for which it was practical to collect data, taking about 15 seconds per move), with the MCTS player barely outperforming the HoldAt20 player against the Optimal player at 1,000,000 trials:
 
-![Pig Player Win Pct vs Optimal](plots/pig.pdf)
+![Pig Player Win Pct vs Optimal](plots/pig.png)
 
 |Player|Games|Mean Win Pct vs Optimal|Standard Error|
 |---|---|---|---|
@@ -379,15 +379,15 @@ Tests were then run for trials in powers of 10 up to 1,000,000 (the largest valu
 Plotting the hold totals from these games we can see how the MCTS player's decisions compare to the HoldAt20 and Optimal players
 (see Neller and Presser's visualization of the roll/hold boundary, fig 3 in their 2004 paper<sup>[[7]](#references "Neller, T. and Clifton G. M. Presser. “Optimal Play of the Dice Game Pig.” (2004)")</sup>).
 
-![HoldAt20 Player Hold Totals](plots/pig-holdat20-optimal-holdtotals.pdf)
+![HoldAt20 Player Hold Totals](plots/pig-holdat20-optimal-holdtotals.png)
 
-![MCTS1000000 Player Hold Totals](plots/pig-mcts1000000-optimal-holdtotals.pdf)
+![MCTS1000000 Player Hold Totals](plots/pig-mcts1000000-optimal-holdtotals.png)
 
-![Optimal Player Hold Totals](plots/pig-optimal-optimal-holdtotals.pdf)
+![Optimal Player Hold Totals](plots/pig-optimal-optimal-holdtotals.png)
 
 Finally, the actions taken by the players in these games can be compared to the actions that an optimal player would have taken, giving a measure of how close they are to optimal play:
 
-![Player Optimal Action Pct](plots/pig-optact.pdf)
+![Player Optimal Action Pct](plots/pig-optact.png)
 
 |Player|Actions|Mean Optimal Action Pct|Standard Error|
 |---|---|---|---|
@@ -401,7 +401,7 @@ Finally, the actions taken by the players in these games can be compared to the 
 
 Interestingly, the MCTS player has a greater advantage over the HoldAt20 player in head-to-head play, beating it at just 10,000 trials:
 
-![Pig Player Win Pct vs HoldAt20](plots/pig-holdat20.pdf)
+![Pig Player Win Pct vs HoldAt20](plots/pig-holdat20.png)
 
 |Player|Samples|Mean Win Pct vs HoldAt20|Standard Error|
 |---|---|---|---|

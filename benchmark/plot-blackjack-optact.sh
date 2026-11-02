@@ -1,5 +1,7 @@
 #!/bin/sh
 
+EXT=png
+
 PLAYERS="\
  data/blackjack-mcts1000tps10-optact\
  data/blackjack-mcts10000tps100-optact\
@@ -15,4 +17,4 @@ PLAYERS="\
            -p -n 100000\
            -l labels-blackjack.txt\
            -t "Player Optimum Action Pct"\
-           -c -s plots/blackjack-optact.pdf
+           -c -s plots/blackjack-optact.${EXT}
