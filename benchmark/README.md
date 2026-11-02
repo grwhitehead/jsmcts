@@ -211,7 +211,7 @@ The simulation was first validated by running the heuristic players and comparin
 The heuristic players performed as expected:
 
 |Player|Hands|Mean Winnings per Hand|Standard Error|Expected|
-|---|---|---|---|
+|---|---|---|---|---|
 |NoBust|1000000|-0.0843|0.0010|-0.05 to -0.08|
 |MimicDealer|1000000|-0.0575|0.0010|-0.057|
 |Baldwin Optimum|100000000|0.0008|0.0001|0.0009|
