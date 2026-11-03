@@ -7,7 +7,7 @@ JSMCTS is a javascript implementation of <a href="https://en.wikipedia.org/wiki/
 Simulations can also be run on the command line using <a href="https://nodejs.org">Node.js</a>, pitting two MCTS players against each other or a MCTS player against a heuristic player.
 
 The performance of JSMCTS on several games for which optimal/perfect playing strategies are known is analyzed in the
-[benchmark](benchmark) directory.
+[benchmark](benchmark/README.md) directory.
 
 ## Monte Carlo Tree Search
 
